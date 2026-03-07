@@ -26,6 +26,15 @@ To ensure a fair evaluation, all AIs were given the exact same starting point:
 2.  **`GEMINI.md` / System Prompt**: Outlining strict coding standards, idempotency requirements, and safety guidelines.
 3.  **Minimal Assistance**: The AIs were expected to scaffold the project, write the core engine, implement the MCP client manager, build robust data transformers, and write YAML test jobs natively without constant human hand-holding.
 
+## The Judge & The Gauntlet
+
+To impartially test these repositories, a fourth AI persona has been introduced: **The Judge**. (See `judge.md` for full details). 
+
+The Judge spawns isolated sub-agents to enter each branch, configure the specific bot, and run it through a brutal three-part gauntlet to test real-world utility:
+1.  **The Local Machine Alarm:** Triggering an OS-level audio/visual alarm via MCP on a strict schedule.
+2.  **The Notion Audit:** Using an official Notion MCP server to map data and write a structured "Audit Status" task into a remote database.
+3.  **The Executive Summary:** Making the bot read its own logs, sending that data to an LLM for summarization, and using a Gmail MCP server to draft a comprehensive report to the user's inbox.
+
 ## Evaluation Criteria
 
 As you explore the different folders, consider how each AI handled:
