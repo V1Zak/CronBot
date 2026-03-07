@@ -17,7 +17,7 @@ This repository contains the results of the showdown. Each folder represents a d
 
 *   **`/Gemini`**: The implementation built autonomously by Google's **Gemini CLI** agent. 
 *   **`/Claude`**: *(Coming Soon)* The implementation built by Anthropic's Claude.
-*   **`/ChatGPT`**: *(Coming Soon)* The implementation built by OpenAI's ChatGPT/Codex.
+*   **`/Codex`**: The implementation built by OpenAI's Codex.
 
 ## The Ground Rules
 
