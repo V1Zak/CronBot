@@ -13,11 +13,11 @@ It is designed to solve the context-limit and cost problems of LLM agents by sep
 
 ## The Contenders
 
-This repository contains the results of the showdown. Each folder represents a distinct, autonomous implementation of the exact same prompt and architectural plan by a different AI model.
+This repository contains the results of the showdown. Each **git branch** contains a distinct, autonomous implementation of the exact same prompt and architectural plan by a different AI model.
 
-*   **`/Gemini`**: The implementation built autonomously by Google's **Gemini CLI** agent. 
-*   **`/Claude`**: *(Coming Soon)* The implementation built by Anthropic's Claude.
-*   **`/Codex`**: The implementation built by OpenAI's Codex.
+*   **Branch `Gemini`**: The implementation built autonomously by Google's **Gemini CLI** agent.
+*   **Branch `Claude`**: The implementation built by Anthropic's **Claude Code** agent.
+*   **Branch `Codex`**: The implementation built by OpenAI's **Codex** agent.
 
 ## The Ground Rules
 
@@ -37,12 +37,29 @@ The Judge spawns isolated sub-agents to enter each branch, configure the specifi
 
 ## Evaluation Criteria
 
-As you explore the different folders, consider how each AI handled:
+As you explore the different branches, consider how each AI handled:
 *   **Architectural Fidelity:** Did they stick to the requested hybrid approach?
 *   **Resilience & Idempotency:** How well did they handle database transactions and state rollbacks when the AI API inevitably fails?
 *   **Context Window Protection:** Did they implement data chunking/transformers before sending raw API payloads to the LLM?
 *   **Code Quality & Modularity:** Is the TypeScript strictly typed? Are there tests?
 
+## Prerequisites & Quick Start
+
+To run any implementation or execute the Judge gauntlet:
+
+1.  **Install Bun** (the runtime all implementations use): `curl -fsSL https://bun.sh/install | bash`
+2.  **Clone the repo:** `git clone https://github.com/V1Zak/CronBot.git && cd CronBot`
+3.  **Copy environment variables:** `cp .env.example .env` and fill in your API keys/tokens (see `.env.example` for all required variables including Anthropic, Slack, Notion, Google Workspace, and session-based auth tokens).
+4.  **Switch to a branch:** `git checkout Claude` (or `Gemini` or `Codex`)
+5.  **Install dependencies:** `bun install`
+6.  **Run the bot:** Each branch has its own README with implementation-specific CLI commands. The general pattern is:
+    *   `bun run src/index.ts run <job.yaml>` — Run a single YAML job
+    *   `bun run src/index.ts daemon <jobs-dir>` — Start the cron daemon
+    *   `bun run src/index.ts validate <job.yaml>` — Validate a job without running
+    *   `bun run src/index.ts logs` — View execution history
+    *   `bun run src/index.ts list <jobs-dir>` — List available jobs
+7.  **Run tests:** `bun test`
+
 ---
 
-*Explore the folders to see how the AI agents stack up against one another in a real-world coding challenge.*
+*Explore the branches to see how the AI agents stack up against one another in a real-world coding challenge.*
