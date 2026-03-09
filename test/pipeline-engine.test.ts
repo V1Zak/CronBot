@@ -195,4 +195,41 @@ describe("PipelineEngine", () => {
     expect(result.steps.ai?.output).toEqual({ summary: "ok" });
     expect(result.steps.ai?.status).toBe("completed");
   });
+
+  test("exec step runs a shell command and captures output", async () => {
+    const { engine } = createHarness();
+    const job: JobDefinition = {
+      name: "exec-test",
+      steps: [
+        {
+          id: "echo",
+          type: "exec",
+          command: "echo",
+          args: ["hello from exec"],
+        },
+      ],
+    };
+
+    const result = await engine.run(job);
+    expect(result.steps.echo?.status).toBe("completed");
+    const output = result.steps.echo?.output as { stdout: string };
+    expect(output.stdout).toBe("hello from exec");
+  });
+
+  test("exec step reports error on failed command", async () => {
+    const { engine } = createHarness();
+    const job: JobDefinition = {
+      name: "exec-fail",
+      steps: [
+        {
+          id: "bad-cmd",
+          type: "exec",
+          command: "false",
+        },
+      ],
+    };
+
+    const result = await engine.run(job);
+    expect(result.error).toContain("exec");
+  });
 });

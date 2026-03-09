@@ -1,0 +1,36 @@
+name: gauntlet-notion-audit
+description: "Gauntlet Test 2: Connect to Notion via MCP, discover schema, create audit record"
+steps:
+  - id: list-databases
+    type: mcp
+    server: notion
+    tool: notion_search
+    input:
+      query: ""
+      filter:
+        property: object
+        value: database
+
+  - id: extract-db
+    type: transform
+    source: "{{ steps.list-databases.output }}"
+    query: "${ Array.isArray(data.results) ? data.results[0] : data }"
+
+  - id: create-record
+    type: mcp
+    server: notion
+    tool: notion_create_page
+    input:
+      parent:
+        database_id: "{{ steps.extract-db.output.id }}"
+      properties:
+        title:
+          title:
+            - text:
+                content: "Audit Run: Claude (Opus 4.6) - Status: OK"
+
+  - id: save-state
+    type: state_write
+    entries:
+      last_notion_audit: "{{ now }}"
+      notion_page_id: "{{ steps.create-record.output.id }}"

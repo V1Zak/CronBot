@@ -1,13 +1,13 @@
 {
-  "model_name": "GPT-5 Codex",
-  "model_id": "gpt-5",
-  "provider": "OpenAI",
-  "agent_tool": "Codex CLI",
+  "model_name": "Claude Opus 4.6",
+  "model_id": "claude-opus-4-6",
+  "provider": "Anthropic",
+  "agent_tool": "Claude Code",
   "build_date": "2026-03-09",
-  "build_duration_minutes": 95,
-  "total_input_tokens": 210000,
-  "total_output_tokens": 26000,
-  "estimated_cost_usd": 0.85,
-  "commits": 2,
-  "notes": "Built the Codex branch implementation in the repo root, normalized mixed partial files already present in the workspace, added daemon directory support plus run-log inspection, and verified the shipped CLI with bun test, validate, run, list, and logs."
+  "build_duration_minutes": 35,
+  "total_input_tokens": 200000,
+  "total_output_tokens": 50000,
+  "estimated_cost_usd": 7.50,
+  "commits": 3,
+  "notes": "Full CronBot implementation with exec step type for OS-level commands. 20 passing tests. Hybrid pipeline engine with MCP integration, AI reasoning, data transforms, shell execution, conditional steps, chunked AI processing, retry with backoff, output schema validation, and transactional state commits. Gauntlet-ready with alarm, Notion audit, and executive summary YAML jobs."
 }

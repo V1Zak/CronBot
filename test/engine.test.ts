@@ -57,4 +57,19 @@ describe("Engine Utilities", () => {
     const res = engine.run(data, "${ data.filter(x => !x.hidden).map(x => x.val) }");
     expect(res).toEqual(["b"]);
   });
+
+  test("template rendering - preserves non-string types for standalone templates", () => {
+    const ctx = {
+      items: [1, 2, 3]
+    };
+
+    const rendered = renderTemplate("{{ items }}", ctx);
+    expect(rendered).toEqual([1, 2, 3]);
+  });
+
+  test("template rendering - handles undefined paths gracefully", () => {
+    const ctx = {};
+    const rendered = renderTemplate("Value: {{ missing.path }}", ctx);
+    expect(rendered).toBe("Value: ");
+  });
 });

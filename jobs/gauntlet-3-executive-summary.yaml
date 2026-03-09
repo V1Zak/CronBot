@@ -1,0 +1,37 @@
+name: gauntlet-executive-summary
+description: "Gauntlet Test 3: Read own logs, summarize with AI, draft Gmail"
+steps:
+  - id: read-logs
+    type: exec
+    command: bun
+    args:
+      - run
+      - src/index.ts
+      - logs
+      - --limit
+      - "10"
+
+  - id: summarize
+    type: ai
+    prompt: |
+      You are reviewing the execution logs of CronBot, an AI-powered automation CLI.
+      Analyze these logs and produce a professional executive summary report in Markdown format.
+      Include: total runs, success/failure rate, any notable errors, and recommendations.
+
+      Logs:
+      {{ steps.read-logs.output.stdout }}
+    system: "You are a senior DevOps analyst producing executive summaries."
+
+  - id: draft-email
+    type: mcp
+    server: google-workspace
+    tool: gmail_create_draft
+    input:
+      subject: "CronBot Executive Summary - {{ now }}"
+      body: "{{ steps.summarize.output.text }}"
+
+  - id: save-state
+    type: state_write
+    entries:
+      last_summary: "{{ now }}"
+      email_draft_id: "{{ steps.draft-email.output.id }}"
