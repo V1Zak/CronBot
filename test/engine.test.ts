@@ -34,7 +34,7 @@ describe("Engine Utilities", () => {
     });
   });
 
-  test("transform engine - dot path access", () => {
+  test("transform engine - jmespath projection", () => {
     const engine = new TransformEngine();
     const data = {
       items: [
@@ -43,7 +43,20 @@ describe("Engine Utilities", () => {
       ]
     };
 
-    const res = engine.run(data, "items.val");
+    const res = engine.run(data, "items[*].val");
+    expect(res).toEqual(["a", "b"]);
+  });
+
+  test("transform engine - wildcard projection", () => {
+    const engine = new TransformEngine();
+    const data = {
+      items: [
+        { id: 1, text: "a" },
+        { id: 2, text: "b" }
+      ]
+    };
+
+    const res = engine.run(data, "items[*].text");
     expect(res).toEqual(["a", "b"]);
   });
 
