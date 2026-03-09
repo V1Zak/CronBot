@@ -1,48 +1,13 @@
+import jmespath from "jmespath";
+
 export class TransformEngine {
   run(source: unknown, query: string): unknown {
-    // Support dot-path expressions and simple JS transforms
+    // Support bespoke JS transforms and standard JMESPath projections.
     if (query.startsWith("$")) {
       return evaluateScript(source, query);
     }
-    return evaluatePath(source, query);
+    return jmespath.search(source, query);
   }
-}
-
-function evaluatePath(data: unknown, path: string): unknown {
-  const parts = path.split(".");
-  let current: unknown = data;
-
-  for (const part of parts) {
-    if (current == null) return null;
-
-    // Array wildcard: [*] maps over arrays
-    if (part === "[*]" || part === "*") {
-      if (!Array.isArray(current)) return current;
-      continue;
-    }
-
-    // Array index: [0], [1], etc.
-    const indexMatch = part.match(/^\[(\d+)\]$/);
-    if (indexMatch) {
-      if (Array.isArray(current)) {
-        current = current[parseInt(indexMatch[1]!, 10)];
-      }
-      continue;
-    }
-
-    if (Array.isArray(current)) {
-      current = current.map((item) => {
-        if (item && typeof item === "object") {
-          return (item as Record<string, unknown>)[part];
-        }
-        return undefined;
-      });
-    } else if (typeof current === "object") {
-      current = (current as Record<string, unknown>)[part];
-    }
-  }
-
-  return current;
 }
 
 function evaluateScript(data: unknown, script: string): unknown {

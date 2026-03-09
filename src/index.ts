@@ -16,14 +16,20 @@ import { ConsoleLogger } from "./utils/logger";
 const program = new Command();
 const rootDir = resolve(import.meta.dir, "..");
 const logger = new ConsoleLogger();
-const stateStore = new StateStore(process.env.CRONBOT_DB_PATH ?? resolve(rootDir, "cronbot.db"));
-const engine = new PipelineEngine({
-  aiRunner: new AiRunner(),
-  mcpManager: new McpManager(resolve(rootDir, "mcp_servers.json")),
-  stateStore,
-  transformEngine: new TransformEngine(),
-  logger,
-});
+
+function createStateStore(): StateStore {
+  return new StateStore(process.env.CRONBOT_DB_PATH ?? resolve(rootDir, "cronbot.db"));
+}
+
+function createEngine(): PipelineEngine {
+  return new PipelineEngine({
+    aiRunner: new AiRunner(),
+    mcpManager: new McpManager(resolve(rootDir, "mcp_servers.json")),
+    stateStore: createStateStore(),
+    transformEngine: new TransformEngine(),
+    logger,
+  });
+}
 
 program.name("cronbot").description("AI-powered automation CLI").version("1.0.0");
 
@@ -32,6 +38,7 @@ program
   .description("Run a single YAML job")
   .argument("<jobPath>", "Path to a YAML job file")
   .action(async (jobPath) => {
+    const engine = createEngine();
     await runJobCommand(jobPath, engine);
   });
 
@@ -56,6 +63,7 @@ program
   .description("Start the cron daemon")
   .argument("[jobPath]", "YAML job file or directory containing jobs", resolve(rootDir, "jobs"))
   .action((jobPath) => {
+    const engine = createEngine();
     daemonCommand(jobPath, engine, logger);
   });
 
@@ -65,6 +73,7 @@ program
   .option("--job <name>", "Filter by job name")
   .option("--limit <count>", "Maximum number of runs to return", "20")
   .action((options) => {
+    const stateStore = createStateStore();
     logsCommand(stateStore, {
       job: options.job,
       limit: Number.parseInt(options.limit, 10),
