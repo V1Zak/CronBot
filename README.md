@@ -1,65 +1,84 @@
-# The CronBot AI Showdown 🤖⚔️
+# The CronBot AI Showdown
 
-Welcome to **CronBot**, a unique experiment in autonomous software engineering. 
+Welcome to **CronBot**, a unique experiment in autonomous software engineering.
 
-The premise of this repository is simple: Provide three different foundational documents (`plan.md` architecture and `rules.md` coding standards) and see how three top-tier AI models perform when tasked with building the same complex application with minimal human intervention.
+The premise is simple: Give multiple AI coding agents the exact same architectural plan (`plan.md`) and coding standards (`rules.md`), then see how each builds the same complex application autonomously with minimal human intervention.
 
 ## The Application: CronBot
 
-The target application all AIs were tasked to build is a **hybrid AI automation CLI daemon**. 
-It is designed to solve the context-limit and cost problems of LLM agents by separating work into two distinct layers:
+The target application is a **hybrid AI automation CLI daemon**.
+It solves the context-limit and cost problems of LLM agents by separating work into two distinct layers:
 1. **Deterministic Filters:** Using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) to fetch data quickly and for free (e.g., searching unread Gmails, fetching Slack history).
 2. **AI Reasoning:** Passing only optimized, transformed data chunks to an LLM (like Claude) for complex reasoning (summarizing, categorizing).
 
-## The Contenders
+## How It Works
 
-This repository contains the results of the showdown. Each **git branch** contains a distinct, autonomous implementation of the exact same prompt and architectural plan by a different AI model.
+Each AI agent is given:
+1. **`plan.md`** — Technical stack (Bun, TypeScript, SQLite, MCP, Anthropic SDK) and the architectural call graph.
+2. **`rules.md`** — Strict coding standards, idempotency requirements, safety guidelines, branching rules, and the mandatory `BUILD_META.json` requirement.
+3. **Minimal Assistance** — The AIs scaffold the project, write the core engine, implement MCP integration, build data transformers, and write YAML test jobs without constant hand-holding.
 
-*   **Branch `Gemini`**: The implementation built autonomously by Google's **Gemini CLI** agent.
-*   **Branch `Claude`**: The implementation built by Anthropic's **Claude Code** agent.
-*   **Branch `Codex`**: The implementation built by OpenAI's **Codex** agent.
+Each AI creates its own **git branch** (e.g., `Claude`, `Codex`, `Gemini`) with a complete implementation. The `main` branch holds only shared documentation.
 
-## The Ground Rules
+### Build Metadata
 
-To ensure a fair evaluation, all AIs were given the exact same starting point:
-1.  **`plan.md`**: Outlining the technical stack (Bun, TypeScript, SQLite, MCP, Anthropic SDK) and the architectural call graph.
-2.  **`rules.md`**: Outlining strict coding standards, idempotency requirements, and safety guidelines.
-3.  **Minimal Assistance**: The AIs were expected to scaffold the project, write the core engine, implement the MCP client manager, build robust data transformers, and write YAML test jobs natively without constant human hand-holding.
+Each AI must produce a `BUILD_META.json` in the project root of its branch containing:
+- Model name and version used
+- Provider and agent tool
+- Build date and duration
+- Token usage (input/output) and estimated cost
+- Number of commits
+
+This data is consumed by The Judge for fair, transparent reporting.
 
 ## The Judge & The Gauntlet
 
-To impartially test these repositories, a fourth AI persona has been introduced: **The Judge**. (See `judge.md` for full details). 
+**The Judge** is an impartial AI evaluator (see `judge.md`) that spawns isolated sub-agents to enter each branch and run it through a brutal three-part gauntlet:
 
-The Judge spawns isolated sub-agents to enter each branch, configure the specific bot, and run it through a brutal three-part gauntlet to test real-world utility:
-1.  **The Local Machine Alarm:** Triggering an OS-level audio/visual alarm via MCP on a strict schedule.
-2.  **The Notion Audit:** Using an official Notion MCP server to map data and write a structured "Audit Status" task into a remote database.
-3.  **The Executive Summary:** Making the bot read its own logs, sending that data to an LLM for summarization, and using a Gmail MCP server to draft a comprehensive report to the user's inbox.
+1. **The Local Machine Alarm** — Can the bot trigger an OS-level sound via a YAML job pipeline?
+2. **The Notion Audit** — Can the bot connect to Notion via MCP, discover the schema (not hallucinate it), and create a record?
+3. **The Executive Summary** — Can the bot chain Filter -> AI -> Action to read its own logs, summarize them with Claude, and draft a Gmail?
+
+Run the gauntlet with the `/judge` slash command in Claude Code. Results are published to `Judge/gauntlet-report.html`.
 
 ## Evaluation Criteria
 
-As you explore the different branches, consider how each AI handled:
-*   **Architectural Fidelity:** Did they stick to the requested hybrid approach?
-*   **Resilience & Idempotency:** How well did they handle database transactions and state rollbacks when the AI API inevitably fails?
-*   **Context Window Protection:** Did they implement data chunking/transformers before sending raw API payloads to the LLM?
-*   **Code Quality & Modularity:** Is the TypeScript strictly typed? Are there tests?
+- **Ease of Setup:** Least human intervention to fix dependencies or syntax errors
+- **Idempotency:** Best error handling without infinite loops or crashes
+- **MCP Integration:** Seamless handling of standard MCP servers without hallucinating tool names or schemas
+- **Code Quality:** Strict TypeScript, test coverage, modularity
 
 ## Prerequisites & Quick Start
 
-To run any implementation or execute the Judge gauntlet:
+1. **Install Bun:** `curl -fsSL https://bun.sh/install | bash`
+2. **Clone the repo:** `git clone https://github.com/V1Zak/CronBot.git && cd CronBot`
+3. **Copy environment variables:** `cp .env.example .env` and fill in your API keys (see `.env.example` for required variables: Anthropic, Notion, Google OAuth).
+4. **Switch to a branch:** `git checkout <BranchName>` (each AI implementation lives on its own branch)
+5. **Install dependencies:** `bun install`
+6. **Run the bot:**
+    * `bun run src/index.ts run <job.yaml>` — Run a single YAML job
+    * `bun run src/index.ts daemon <jobs-dir>` — Start the cron daemon
+    * `bun run src/index.ts validate <job.yaml>` — Validate a job without running
+    * `bun run src/index.ts logs` — View execution history
+    * `bun run src/index.ts list <jobs-dir>` — List available jobs
+7. **Run tests:** `bun test`
 
-1.  **Install Bun** (the runtime all implementations use): `curl -fsSL https://bun.sh/install | bash`
-2.  **Clone the repo:** `git clone https://github.com/V1Zak/CronBot.git && cd CronBot`
-3.  **Copy environment variables:** `cp .env.example .env` and fill in your API keys/tokens (see `.env.example` for all required variables including Anthropic, Slack, Notion, Google Workspace, and session-based auth tokens).
-4.  **Switch to a branch:** `git checkout Claude` (or `Gemini` or `Codex`)
-5.  **Install dependencies:** `bun install`
-6.  **Run the bot:** Each branch has its own README with implementation-specific CLI commands. The general pattern is:
-    *   `bun run src/index.ts run <job.yaml>` — Run a single YAML job
-    *   `bun run src/index.ts daemon <jobs-dir>` — Start the cron daemon
-    *   `bun run src/index.ts validate <job.yaml>` — Validate a job without running
-    *   `bun run src/index.ts logs` — View execution history
-    *   `bun run src/index.ts list <jobs-dir>` — List available jobs
-7.  **Run tests:** `bun test`
+## Repository Structure
+
+```
+CronBot/
+├── plan.md              # Architecture and tech stack
+├── rules.md             # Coding standards and build rules
+├── judge.md             # The Judge's evaluation methodology
+├── .env.example         # Required environment variables
+├── Judge/
+│   └── gauntlet-report.html   # Latest evaluation report
+├── .claude/
+│   └── commands/
+│       └── judge.md     # /judge slash command skill
+└── test_v1/             # Archived v1 implementations (local only)
+```
 
 ---
 
-*Explore the branches to see how the AI agents stack up against one another in a real-world coding challenge.*
+*Each branch is a self-contained implementation built autonomously by a different AI. Explore and compare.*
