@@ -15,11 +15,18 @@ If any key is missing or invalid, stop and tell the user what's needed before pr
 
 Run all phases using **isolated sub-agents** per implementation to prevent context pollution.
 
-### Phase 0: Build System Validation
-For each implementation (Claude, Codex, Gemini), spawn a sub-agent to:
-1. **Claude**: Test in `/Users/vizak/Projects/CronBot/Claude/` (local directory)
-2. **Codex**: Create worktree `git worktree add /tmp/cronbot-codex-judge Codex`, test there
-3. **Gemini**: Create worktree `git worktree add /tmp/cronbot-gemini-judge Gemini`, test there
+### Phase 0: Discover Branches & Build Metadata
+First, detect which AI branches exist: `git branch -a | grep -v main | grep -v HEAD`
+Each branch should contain a `BUILD_META.json` in the project root with:
+- `model_name`, `model_id`, `provider`, `agent_tool` — which LLM built it
+- `build_date`, `build_duration_minutes` — when and how long
+- `total_input_tokens`, `total_output_tokens`, `estimated_cost_usd` — token usage and cost
+- `commits`, `notes`
+
+For each discovered branch, spawn an isolated sub-agent:
+- Read `BUILD_META.json` first (via `git show <branch>:BUILD_META.json`). If missing, note it as "metadata not provided" and infer what you can from git log dates and commit messages.
+- Set up worktree: `git worktree add /tmp/cronbot-<name>-judge <branch>` (or use local dir if source exists there)
+- Copy `.env` to the worktree
 
 Each sub-agent checks:
 - `bun install` succeeds
@@ -69,19 +76,32 @@ Each sub-agent:
 
 ## Report Generation
 
-After all tests complete, generate an HTML report at `Judge/gauntlet-report.html` with:
+After all tests complete, generate an HTML report at `Judge/gauntlet-report.html`.
 
-1. **Context section** - What CronBot is, the 3 contenders, the 3 gauntlet tests, methodology
-2. **Winner banner** - Declare overall winner
-3. **Score cards** - 1st/2nd/3rd with per-test badges (pass/partial/fail)
-4. **Build system table** - Dependencies, TypeScript, tests
-5. **Step types comparison** - What each engine supports
-6. **Per-test detailed results** - 3-column grid with findings per AI per test
-7. **Critical bugs list** - All bugs found with AI attribution
-8. **Evaluation criteria** - Ease of Setup, Idempotency, MCP Integration (per judge.md)
-9. **Final verdict** - Paragraph per AI explaining placement
+**Use the exact same visual style as the existing report** (dark GitHub theme, CSS variables, responsive grid layout, score cards, test grids, badge system). Read the current `Judge/gauntlet-report.html` for the CSS and HTML structure to replicate.
 
-Use dark theme (GitHub dark style), responsive grid layout. Open the report in browser when done.
+The report must include these sections in order:
+
+1. **Header** - Title, subtitle, date, runtime info
+2. **Context section** - What CronBot is, the contenders, the gauntlet tests, methodology
+3. **Build metadata cards** - For each AI, show from BUILD_META.json:
+   - Model name & version (e.g., "Claude Sonnet 4 / claude-sonnet-4-20250514")
+   - Provider & agent tool (e.g., "Anthropic / Claude Code")
+   - Build date & duration
+   - Token usage (input + output tokens)
+   - Estimated cost in USD
+   - Number of commits
+   If BUILD_META.json is missing, show "Metadata not provided" with whatever can be inferred from git history
+4. **Winner banner** - Declare overall winner
+5. **Score cards** - 1st/2nd/3rd with per-test badges (pass/partial/fail)
+6. **Build system table** - Dependencies, TypeScript, tests
+7. **Step types comparison** - What each engine supports
+8. **Per-test detailed results** - 3-column grid with findings per AI per test
+9. **Critical bugs list** - All bugs found with AI attribution
+10. **Evaluation criteria** - Ease of Setup, Idempotency, MCP Integration (per judge.md)
+11. **Final verdict** - Paragraph per AI explaining placement
+
+Open the report in browser when done.
 
 ## Scoring Rules
 

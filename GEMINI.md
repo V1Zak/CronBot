@@ -18,6 +18,32 @@ You are operating within the **CronBot** workspace. Your primary goal is to help
 *   **Context Window Protection (Data Transformers):** Never feed raw API/MCP payloads directly to the AI step if the payload is a large array. Implement a **Transform Step** (using tools like JMESPath or native JS mapping) to filter, pluck, and truncate data before it hits the Claude API.
 *   **Stateless Jobs, Stateful Engine:** Job YAML definitions should be entirely stateless pipelines. The Engine handles state injection (e.g., querying SQLite for `last_checked_timestamp` and injecting it into the YAML variable `{{ state.last_ts }}`).
 
+## Git & Branching Rules
+*   **Never commit to `main`.** The `main` branch contains only shared documentation (`plan.md`, `GEMINI.md`, `judge.md`, `README.md`, `.env.example`).
+*   **Create a dedicated branch** named after your AI model (e.g., `Claude`, `Codex`, `Gemini`). All implementation code must live on your branch only.
+*   **Branch from `main`:** `git checkout -b <YourModelName> main`
+
+## Build Metadata (Required)
+When you complete the build, you **must** create a `BUILD_META.json` file in the project root of your branch with the following fields:
+
+```json
+{
+  "model_name": "Claude Sonnet 4",
+  "model_id": "claude-sonnet-4-20250514",
+  "provider": "Anthropic",
+  "agent_tool": "Claude Code",
+  "build_date": "2026-03-07",
+  "build_duration_minutes": 78,
+  "total_input_tokens": 245000,
+  "total_output_tokens": 62000,
+  "estimated_cost_usd": 1.84,
+  "commits": 4,
+  "notes": "Any relevant observations about the build process"
+}
+```
+
+Fill in the actual values from your session. This metadata is used by The Judge to generate fair evaluation reports. If you cannot determine exact token counts, provide your best estimate. Do not omit this file.
+
 ## Development Workflow
 1.  **Testing First:** Whenever implementing a new pipeline engine feature or MCP client integration, write a `bun test` alongside it.
 2.  **Modularity:** Keep the Pipeline Engine (`engine.ts`), Data Transformer (`transform.ts`), MCP Client Manager (`mcp.ts`), and AI Runner (`ai.ts`) decoupled. The Pipeline Engine coordinates them.

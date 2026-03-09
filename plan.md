@@ -104,3 +104,25 @@ CronBot/
 *   **Phase 3:** Integrate MCP Client SDK & connection manager via `mcp_servers.json`.
 *   **Phase 4:** Implement Data Transformer (chunking/mapping) and AI integration (Anthropic SDK).
 *   **Phase 5:** Build scheduling daemon (`croner`), robust error handling, and transactional state commits.
+*   **Phase 6 (Final):** Generate `BUILD_META.json` with build metadata (see GEMINI.md for schema).
+
+## Git & Branching Rules
+*   **Do NOT commit to `main`.** Main holds shared docs only.
+*   Create a branch named after your AI model: `git checkout -b <YourModelName> main`
+*   All implementation code lives on your branch.
+
+## Build Metadata Requirement
+Upon completion, create a `BUILD_META.json` in the project root containing:
+*   `model_name` — Human-readable model name (e.g., "Claude Sonnet 4", "Gemini 2.5 Pro")
+*   `model_id` — Exact model identifier used (e.g., "claude-sonnet-4-20250514", "gemini-2.5-pro")
+*   `provider` — Company name (Anthropic, OpenAI, Google)
+*   `agent_tool` — CLI tool used (Claude Code, Codex CLI, Gemini CLI)
+*   `build_date` — ISO date when the build was completed
+*   `build_duration_minutes` — Approximate total session time
+*   `total_input_tokens` — Total input tokens consumed during the build
+*   `total_output_tokens` — Total output tokens consumed during the build
+*   `estimated_cost_usd` — Estimated API cost for the full build
+*   `commits` — Number of commits made
+*   `notes` — Any relevant observations
+
+This file is read by The Judge to populate evaluation reports. It is mandatory.
