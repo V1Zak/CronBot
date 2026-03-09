@@ -1,0 +1,4 @@
+Standup notes A:
+
+- Customer import failed twice overnight.
+- Retry logic needs a visible dashboard.

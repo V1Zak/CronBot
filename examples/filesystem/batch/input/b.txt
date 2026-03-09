@@ -1,0 +1,4 @@
+Standup notes B:
+
+- Vendor webhook latency improved after the deploy.
+- Need a rollback checklist for the next release.
