@@ -1,0 +1,4 @@
+Standup notes C:
+
+- Billing export is still missing one edge-case mapping.
+- Schedule pair debugging with the finance systems owner.

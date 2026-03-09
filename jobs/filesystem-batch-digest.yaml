@@ -1,0 +1,77 @@
+name: filesystem-batch-digest
+schedule: "0 */12 * * *"
+steps:
+  - id: read-note-a
+    type: mcp
+    server: filesystem
+    tool: read_text_file
+    input:
+      path: ./examples/filesystem/batch/input/a.txt
+  - id: read-note-b
+    type: mcp
+    server: filesystem
+    tool: read_text_file
+    input:
+      path: ./examples/filesystem/batch/input/b.txt
+  - id: read-note-c
+    type: mcp
+    server: filesystem
+    tool: read_text_file
+    input:
+      path: ./examples/filesystem/batch/input/c.txt
+  - id: summarize-batch
+    type: ai
+    outputSchema:
+      type: object
+      properties:
+        chunks:
+          type: array
+          items:
+            type: object
+            properties:
+              summary:
+                type: string
+        aggregate:
+          type: object
+          properties:
+            text:
+              type: string
+    source:
+      - "{{ steps.read-note-a.output.structuredContent.content }}"
+      - "{{ steps.read-note-b.output.structuredContent.content }}"
+      - "{{ steps.read-note-c.output.structuredContent.content }}"
+    prompt: |
+      Chunk {{ chunk.number }} of {{ chunk.total }}.
+      Summarize these notes into markdown bullets:
+      {{ chunk.items }}
+    chunk:
+      size: 2
+      aggregatePrompt: |
+        Combine these partial digests into a single markdown report:
+        {{ chunks.results }}
+    mockResponses:
+      - summary: "Chunk 1: two notes summarized."
+      - summary: "Chunk 2: final note summarized."
+    aggregateMockResponse:
+      text: |
+        # Batch Digest
+
+        - Combined summary for the three filesystem notes.
+  - id: ensure-output-dir
+    type: mcp
+    server: filesystem
+    tool: create_directory
+    input:
+      path: ./examples/filesystem/batch/output
+  - id: write-digest
+    type: mcp
+    server: filesystem
+    tool: write_file
+    input:
+      path: ./examples/filesystem/batch/output/digest.md
+      content: "{{ steps.summarize-batch.output.aggregate.text }}"
+  - id: save-state
+    type: state_write
+    entries:
+      last_batch_digest: ./examples/filesystem/batch/output/digest.md
+      last_run_at: "{{ now }}"
