@@ -1,0 +1,41 @@
+name: filesystem-note-organizer
+schedule: "0 */6 * * *"
+steps:
+  - id: read-note
+    type: mcp
+    server: filesystem
+    tool: read_file
+    input:
+      path: ./examples/filesystem/input/note.txt
+  - id: summarize
+    type: ai
+    outputSchema:
+      type: object
+      properties:
+        text:
+          type: string
+    prompt: |
+      Rewrite this note into concise markdown with action items:
+      {{ steps.read-note.output.structuredContent.content }}
+    mockResponse:
+      text: |
+        # Ops Summary
+
+        - Follow up with the API vendor about webhook retries.
+        - Clean up the draft automation flow before Monday.
+        - Capture the latest blockers from the ops standup.
+  - id: write-summary
+    type: mcp
+    server: filesystem
+    tool: write_file
+    retry:
+      attempts: 3
+      backoffMs: 250
+    input:
+      path: ./examples/filesystem/output/ops-summary.md
+      content: "{{ steps.summarize.output.text }}"
+  - id: save-state
+    type: state_write
+    entries:
+      last_summary_path: ./examples/filesystem/output/ops-summary.md
+      last_run_at: "{{ now }}"

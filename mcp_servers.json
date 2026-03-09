@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "transport": "stdio",
+      "command": "./node_modules/.bin/mcp-server-filesystem",
+      "args": [
+        "./examples/filesystem"
+      ]
+    },
+    "mock-source": {
+      "transport": "mock",
+      "tools": {
+        "fetch_items": {
+          "response": {
+            "items": [
+              { "id": 1, "text": "First item" },
+              { "id": 2, "text": "Second item" },
+              { "id": 3, "text": "Third item" }
+            ]
+          }
+        }
+      }
+    },
+    "mock-sink": {
+      "transport": "mock",
+      "tools": {
+        "post_result": {
+          "response": {
+            "ok": true,
+            "channel": "#ops"
+          }
+        }
+      }
+    }
+  }
+}

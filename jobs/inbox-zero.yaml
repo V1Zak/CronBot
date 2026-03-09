@@ -1,0 +1,30 @@
+name: inbox-zero
+schedule: "*/15 * * * *"
+steps:
+  - id: filter
+    type: mcp
+    server: mock-source
+    tool: fetch_items
+    input: {}
+  - id: summarize
+    type: ai
+    outputSchema:
+      type: object
+      properties:
+        summary:
+          type: string
+    prompt: |
+      Summarize this content as a short markdown digest:
+      {{ steps.filter.output.items }}
+    mockResponse:
+      summary: "- No urgent emails"
+  - id: notify
+    type: mcp
+    server: mock-sink
+    tool: post_result
+    input:
+      body: "{{ steps.summarize.output.summary }}"
+  - id: save-state
+    type: state_write
+    entries:
+      last_digest: "{{ now }}"
