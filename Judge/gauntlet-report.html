@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Judge - CronBot Gauntlet Report</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --orange: #db6d28;
+    --purple: #bc8cff;
+    --claude-color: #d4a27f;
+    --codex-color: #74b9ff;
+    --gemini-color: #a29bfe;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+
+  header h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  header h1 span.gavel { font-size: 3.2rem; }
+  header .subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+  }
+
+  header .date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  .winner-banner {
+    background: linear-gradient(135deg, #1a1e2e, #1e2a1e);
+    border: 2px solid var(--green);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .winner-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(63,185,80,0.1), transparent 70%);
+  }
+
+  .winner-banner h2 {
+    font-size: 1.8rem;
+    color: var(--green);
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+
+  .winner-banner .winner-name {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--claude-color);
+    position: relative;
+  }
+
+  .winner-banner .winner-score {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    position: relative;
+  }
+
+  .scores-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .score-card:hover { transform: translateY(-2px); }
+  .score-card.winner { border-color: var(--green); }
+
+  .score-card .ai-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .score-card .ai-name.claude { color: var(--claude-color); }
+  .score-card .ai-name.codex { color: var(--codex-color); }
+  .score-card .ai-name.gemini { color: var(--gemini-color); }
+
+  .score-card .total-score {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0.5rem 0;
+  }
+
+  .score-card .total-score.first { color: var(--green); }
+  .score-card .total-score.second { color: var(--yellow); }
+  .score-card .total-score.third { color: var(--orange); }
+
+  .score-card .score-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .score-card .test-scores {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .mini-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .mini-badge.pass { background: rgba(63,185,80,0.15); color: var(--green); }
+  .mini-badge.partial { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .mini-badge.fail { background: rgba(248,81,73,0.15); color: var(--red); }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  section > h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .test-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+
+  .test-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .test-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .test-header .test-winner {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    background: rgba(63,185,80,0.15);
+    color: var(--green);
+  }
+
+  .test-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .test-cell {
+    padding: 1.25rem 1.5rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .test-cell:last-child { border-right: none; }
+
+  .test-cell .cell-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .test-cell .cell-ai {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge.pass { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge.partial { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .badge.fail { background: rgba(248,81,73,0.15); color: var(--red); }
+
+  .test-cell ul {
+    list-style: none;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .test-cell ul li {
+    padding: 0.2rem 0;
+    padding-left: 1.2rem;
+    position: relative;
+  }
+
+  .test-cell ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55rem;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .test-cell ul li.pro::before { background: var(--green); }
+  .test-cell ul li.con::before { background: var(--red); }
+  .test-cell ul li.note::before { background: var(--yellow); }
+
+  .criteria-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .criteria-table th, .criteria-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .criteria-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .criteria-table td { font-size: 0.9rem; }
+
+  .criteria-table tr:last-child td { border-bottom: none; }
+
+  .criteria-table .check { color: var(--green); }
+  .criteria-table .cross { color: var(--red); }
+  .criteria-table .warn { color: var(--yellow); }
+
+  .build-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .build-table th, .build-table td {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .build-table th {
+    background: rgba(0,0,0,0.3);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .build-table th:first-child, .build-table td:first-child { text-align: left; }
+  .build-table tr:last-child td { border-bottom: none; }
+
+  .step-types-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .step-types-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+
+  .step-types-card h4 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .step-types-card h4.claude { color: var(--claude-color); }
+  .step-types-card h4.codex { color: var(--codex-color); }
+  .step-types-card h4.gemini { color: var(--gemini-color); }
+
+  .step-tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0.15rem;
+    font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+  }
+
+  .step-tag.available { background: rgba(63,185,80,0.15); color: var(--green); }
+  .step-tag.missing { background: rgba(248,81,73,0.1); color: var(--red); border: 1px dashed rgba(248,81,73,0.3); }
+
+  .verdict-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+  }
+
+  .verdict-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--accent);
+  }
+
+  .verdict-section p {
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+
+  .verdict-section strong { color: var(--text); }
+
+  .bugs-found {
+    margin-top: 1rem;
+  }
+
+  .bug-item {
+    background: rgba(248,81,73,0.05);
+    border-left: 3px solid var(--red);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.85rem;
+  }
+
+  .bug-item .bug-ai {
+    font-weight: 700;
+    margin-right: 0.5rem;
+  }
+
+  .bug-item .bug-ai.codex { color: var(--codex-color); }
+  .bug-item .bug-ai.gemini { color: var(--gemini-color); }
+  .bug-item .bug-ai.claude { color: var(--claude-color); }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .context-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .context-section h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--accent);
+  }
+
+  .context-section p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .context-section p strong { color: var(--text); }
+
+  .context-section .contenders {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1.25rem 0;
+  }
+
+  .contender-card {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .contender-card .c-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.25rem; }
+  .contender-card .c-org { color: var(--text-muted); font-size: 0.8rem; }
+
+  .gauntlet-tests {
+    margin-top: 1.25rem;
+  }
+
+  .gauntlet-test-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+  }
+
+  .gauntlet-test-item:last-child { border-bottom: none; }
+
+  .gauntlet-test-item .test-num {
+    background: rgba(88,166,255,0.1);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 0.1rem;
+  }
+
+  .gauntlet-test-item .test-desc {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+
+  .gauntlet-test-item .test-desc strong { color: var(--text); }
+
+  .methodology-note {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: rgba(88,166,255,0.05);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 768px) {
+    .context-section .contenders { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .scores-overview, .test-grid, .step-types-grid {
+      grid-template-columns: 1fr;
+    }
+    .test-cell { border-right: none; border-bottom: 1px solid var(--border); }
+    .test-cell:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="gavel">&#9878;</span> The Judge</h1>
+  <div class="subtitle">CronBot AI Showdown &mdash; Gauntlet Evaluation Report</div>
+  <div class="date">March 8, 2026 &bull; Runtime: Bun 1.3.10 &bull; macOS Darwin 25.1.0</div>
+</header>
+
+<!-- CONTEXT: WHAT IS THIS? -->
+<div class="context-section">
+  <h2>What Is This?</h2>
+  <p>
+    <strong>CronBot</strong> is a hybrid AI automation CLI daemon that schedules and runs data pipelines using
+    <strong>YAML job definitions</strong>, the <strong>Model Context Protocol (MCP)</strong> for external tool calls,
+    and <strong>Claude AI</strong> for intelligent reasoning steps. It separates deterministic data fetching (free, fast)
+    from AI reasoning (paid, slow) to protect context windows and reduce costs.
+  </p>
+  <p>
+    <strong>The experiment:</strong> Three top-tier AI coding agents were each given the exact same architectural plan
+    (<code>plan.md</code>) and coding standards (<code>GEMINI.md</code>) and asked to autonomously build the entire
+    application from scratch with minimal human intervention. Each AI's implementation lives on its own git branch.
+  </p>
+
+  <div class="contenders">
+    <div class="contender-card">
+      <div class="c-name" style="color:var(--claude-color)">Claude</div>
+      <div class="c-org">Anthropic &bull; Claude Code Agent</div>
+    </div>
+    <div class="contender-card">
+      <div class="c-name" style="color:var(--codex-color)">Codex</div>
+      <div class="c-org">OpenAI &bull; Codex Agent</div>
+    </div>
+    <div class="contender-card">
+      <div class="c-name" style="color:var(--gemini-color)">Gemini</div>
+      <div class="c-org">Google &bull; Gemini CLI Agent</div>
+    </div>
+  </div>
+
+  <p>
+    <strong>The Judge</strong> is a fourth, impartial AI evaluator (Claude Code, Opus 4.6) that spawns isolated sub-agents
+    to enter each branch and run it through a brutal three-part gauntlet testing real-world utility. Each implementation
+    is evaluated independently to avoid context pollution or bias.
+  </p>
+
+  <div class="gauntlet-tests">
+    <div class="gauntlet-test-item">
+      <span class="test-num">Test 1</span>
+      <div class="test-desc">
+        <strong>The Local Machine Alarm</strong> &mdash; Can the bot interact with the local operating system?
+        Create a YAML job that triggers an OS-level audio alarm using shell commands or MCP tools.
+        Tests native OS integration and the engine's ability to execute side effects.
+      </div>
+    </div>
+    <div class="gauntlet-test-item">
+      <span class="test-num">Test 2</span>
+      <div class="test-desc">
+        <strong>The Notion Audit</strong> &mdash; Can the bot handle external APIs and complex data transformations?
+        Connect to a live Notion database via the official MCP server, read the schema, and create a new record:
+        <em>"Audit Run: [AI Name] - Status: OK"</em>. Tests MCP integration, schema discovery (vs. hallucination),
+        and handling of large JSON payloads.
+      </div>
+    </div>
+    <div class="gauntlet-test-item">
+      <span class="test-num">Test 3</span>
+      <div class="test-desc">
+        <strong>The Executive Summary</strong> &mdash; Can the bot chain Filter &rarr; AI &rarr; Action?
+        Read the bot's own execution logs, send them to Claude for summarization, then use a Gmail MCP server
+        to draft an email containing the report. Tests multi-step pipeline orchestration and end-to-end data flow.
+      </div>
+    </div>
+  </div>
+
+  <div class="methodology-note">
+    <strong>Methodology:</strong> Each test was run via isolated git worktrees (Codex, Gemini) or the local directory (Claude).
+    The Judge first validated build systems (dependencies, TypeScript compilation, tests), then executed each gauntlet test
+    with live API credentials (Anthropic, Notion, Google OAuth). Results were verified independently via API calls.
+    Bugs that required manual fixes are noted &mdash; fewer fixes needed = better score.
+  </div>
+</div>
+
+<!-- WINNER BANNER -->
+<div class="winner-banner">
+  <h2>&#127942; The Verdict Is In</h2>
+  <div class="winner-name">Claude Wins</div>
+  <div class="winner-score">Highest reliability, fewest bugs, cleanest architecture &mdash; 2.5 / 3 tests won</div>
+</div>
+
+<!-- OVERALL SCORES -->
+<div class="scores-overview">
+  <div class="score-card winner">
+    <div class="ai-name claude">Claude</div>
+    <div class="score-label">Anthropic &bull; Claude Code</div>
+    <div class="total-score first">1st</div>
+    <div class="score-label">Best overall &mdash; 0 critical bugs</div>
+    <div class="test-scores">
+      <span class="mini-badge partial">T1</span>
+      <span class="mini-badge pass">T2</span>
+      <span class="mini-badge pass">T3</span>
+    </div>
+  </div>
+  <div class="score-card">
+    <div class="ai-name codex">Codex</div>
+    <div class="score-label">OpenAI &bull; Codex Agent</div>
+    <div class="total-score second">2nd</div>
+    <div class="score-label">Best features &mdash; 3 critical bugs</div>
+    <div class="test-scores">
+      <span class="mini-badge pass">T1</span>
+      <span class="mini-badge partial">T2</span>
+      <span class="mini-badge pass">T3</span>
+    </div>
+  </div>
+  <div class="score-card">
+    <div class="ai-name gemini">Gemini</div>
+    <div class="score-label">Google &bull; Gemini CLI</div>
+    <div class="total-score third">3rd</div>
+    <div class="score-label">Sound design &mdash; 5 critical bugs</div>
+    <div class="test-scores">
+      <span class="mini-badge partial">T1</span>
+      <span class="mini-badge partial">T2</span>
+      <span class="mini-badge partial">T3</span>
+    </div>
+  </div>
+</div>
+
+<!-- BUILD SYSTEM -->
+<section>
+  <h2>&#128736; Phase 0: Build System</h2>
+  <table class="build-table">
+    <thead>
+      <tr>
+        <th>Check</th>
+        <th>Claude</th>
+        <th>Codex</th>
+        <th>Gemini</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Dependencies Install</td>
+        <td><span class="check">&#10003; Clean</span> (106 pkgs)</td>
+        <td><span class="check">&#10003; Clean</span> (159 pkgs)</td>
+        <td><span class="check">&#10003; Clean</span> (103 pkgs)</td>
+      </tr>
+      <tr>
+        <td>TypeScript Compiles</td>
+        <td><span class="check">&#10003; 0 errors</span></td>
+        <td><span class="check">&#10003; 0 errors</span></td>
+        <td><span class="cross">&#10007; 5 type errors</span></td>
+      </tr>
+      <tr>
+        <td>Tests Pass</td>
+        <td><span class="check">&#10003; 43/43</span></td>
+        <td><span class="warn">&#9888; 7/10</span></td>
+        <td><span class="check">&#10003; 1/1</span></td>
+      </tr>
+      <tr>
+        <td>Test Coverage</td>
+        <td>6 test files, 65 expects</td>
+        <td>2 test files, 3 fail (hardcoded paths)</td>
+        <td>1 test file (minimal)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- STEP TYPES -->
+<section>
+  <h2>&#9881; Engine Step Types</h2>
+  <div class="step-types-grid">
+    <div class="step-types-card">
+      <h4 class="claude">Claude</h4>
+      <span class="step-tag available">mcp</span>
+      <span class="step-tag available">transform</span>
+      <span class="step-tag available">ai</span>
+      <span class="step-tag available">state_write</span>
+      <span class="step-tag missing">shell &cross;</span>
+    </div>
+    <div class="step-types-card">
+      <h4 class="codex">Codex</h4>
+      <span class="step-tag available">mcp</span>
+      <span class="step-tag available">transform</span>
+      <span class="step-tag available">ai</span>
+      <span class="step-tag available">state_write</span>
+      <span class="step-tag available">shell</span>
+    </div>
+    <div class="step-types-card">
+      <h4 class="gemini">Gemini</h4>
+      <span class="step-tag available">filter</span>
+      <span class="step-tag available">action</span>
+      <span class="step-tag available">transform</span>
+      <span class="step-tag available">ai</span>
+      <span class="step-tag available">state</span>
+      <span class="step-tag missing">shell &cross;</span>
+    </div>
+  </div>
+</section>
+
+<!-- TEST 1 -->
+<section>
+  <h2>&#128276; Test 1: The Local Machine Alarm</h2>
+  <p style="color:var(--text-muted); margin-bottom:1rem; font-size:0.9rem;">
+    Objective: Trigger an OS-level sound on the local machine via a YAML job pipeline.
+  </p>
+  <div class="test-section">
+    <div class="test-header">
+      <h3>Results</h3>
+      <span class="test-winner">&#127942; Winner: Codex</span>
+    </div>
+    <div class="test-grid">
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--claude-color)">Claude</span>
+          <span class="badge partial">Partial</span>
+        </div>
+        <ul>
+          <li class="con">No shell/exec step type</li>
+          <li class="note">Wrote alarm file to disk via filesystem MCP as workaround</li>
+          <li class="pro">Pipeline ran cleanly, no crashes</li>
+          <li class="pro">Validation gives clear error messages</li>
+          <li class="con">Cannot play system sounds natively</li>
+        </ul>
+      </div>
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--codex-color)">Codex</span>
+          <span class="badge pass">Pass</span>
+        </div>
+        <ul>
+          <li class="pro">Native <code>shell</code> step type</li>
+          <li class="pro">Glass.aiff played via afplay, exit code 0</li>
+          <li class="pro">Ships with pre-built alarm YAML</li>
+          <li class="pro">Shell runs in /bin/zsh -lc (login shell)</li>
+          <li class="pro">Timeout support on shell steps</li>
+        </ul>
+      </div>
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--gemini-color)">Gemini</span>
+          <span class="badge partial">Partial</span>
+        </div>
+        <ul>
+          <li class="con">No shell step type</li>
+          <li class="note">Used Bun.spawnSync() via transform step</li>
+          <li class="pro">Sound played successfully</li>
+          <li class="con">Transform uses new Function() &mdash; security risk</li>
+          <li class="con">Undocumented workaround</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEST 2 -->
+<section>
+  <h2>&#128221; Test 2: The Notion Audit</h2>
+  <p style="color:var(--text-muted); margin-bottom:1rem; font-size:0.9rem;">
+    Objective: Connect to Notion MCP, read a database, and create a record: "Audit Run: [AI] - Status: OK"
+  </p>
+  <div class="test-section">
+    <div class="test-header">
+      <h3>Results</h3>
+      <span class="test-winner">&#127942; Winner: Claude</span>
+    </div>
+    <div class="test-grid">
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--claude-color)">Claude</span>
+          <span class="badge pass">Pass</span>
+        </div>
+        <ul>
+          <li class="pro">Used real MCP tool names (API-post-search, API-post-page)</li>
+          <li class="pro">Correct Notion API schema format</li>
+          <li class="pro">Record created &amp; verified in Notion</li>
+          <li class="pro">No schema hallucination</li>
+          <li class="note">Needed minor YAML fixes (property name, JMESPath path)</li>
+        </ul>
+      </div>
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--codex-color)">Codex</span>
+          <span class="badge partial">Fixed</span>
+        </div>
+        <ul>
+          <li class="con">Hallucinated tool name: "create-a-page" (real: API-post-page)</li>
+          <li class="con">Wrong parent format (data_source_id vs database_id)</li>
+          <li class="con">Wrong property structure</li>
+          <li class="pro">Record created after 3 bug fixes</li>
+          <li class="con">Crashes on wrong tool names (unhandled McpError)</li>
+        </ul>
+      </div>
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--gemini-color)">Gemini</span>
+          <span class="badge partial">Fixed</span>
+        </div>
+        <ul>
+          <li class="con">Zod v4 crashes on nested args</li>
+          <li class="con">MCP client ignores per-server env vars</li>
+          <li class="con">Notion MCP not pre-configured</li>
+          <li class="pro">Record created after 3 bug fixes</li>
+          <li class="con">Silently reports success on API errors</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEST 3 -->
+<section>
+  <h2>&#128231; Test 3: The Executive Summary (Email)</h2>
+  <p style="color:var(--text-muted); margin-bottom:1rem; font-size:0.9rem;">
+    Objective: Read execution logs &#8594; AI summarization &#8594; Draft Gmail email with the report.
+  </p>
+  <div class="test-section">
+    <div class="test-header">
+      <h3>Results</h3>
+      <span class="test-winner">&#127942; Winner: Claude</span>
+    </div>
+    <div class="test-grid">
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--claude-color)">Claude</span>
+          <span class="badge pass">Pass</span>
+        </div>
+        <ul>
+          <li class="pro">Full pipeline: filesystem MCP &#8594; AI &#8594; Gmail MCP</li>
+          <li class="pro">Real Claude API call (835 in / 408 out tokens)</li>
+          <li class="pro">Gmail draft created &amp; verified</li>
+          <li class="pro">Coherent markdown summary generated</li>
+          <li class="note">Logs pre-dumped to file (no shell step to query SQLite)</li>
+          <li class="note">Gmail MCP server needed manual setup</li>
+        </ul>
+      </div>
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--codex-color)">Codex</span>
+          <span class="badge pass">Pass</span>
+        </div>
+        <ul>
+          <li class="pro">5-step pipeline with AI chunking/aggregation</li>
+          <li class="pro">Gmail draft created successfully</li>
+          <li class="pro">Sophisticated map-reduce pattern for large inputs</li>
+          <li class="con">AI used mockResponses only &mdash; no live Claude call</li>
+          <li class="con">Gmail MCP binds port 3000 (fragile)</li>
+          <li class="con">Manual credential file setup needed</li>
+        </ul>
+      </div>
+      <div class="test-cell">
+        <div class="cell-header">
+          <span class="cell-ai" style="color:var(--gemini-color)">Gemini</span>
+          <span class="badge partial">Fixed</span>
+        </div>
+        <ul>
+          <li class="pro">Pipeline ran end-to-end after fixes</li>
+          <li class="pro">Gmail draft created</li>
+          <li class="con">5 fixes needed (Zod, env, model, paths, npm cache)</li>
+          <li class="con">Deprecated model hardcoded (claude-3-7-sonnet)</li>
+          <li class="con">Hallucinated MCP package name</li>
+          <li class="con">No retry logic for transient failures</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CRITICAL BUGS -->
+<section>
+  <h2>&#128027; Critical Bugs Found</h2>
+  <div class="bugs-found">
+    <div class="bug-item">
+      <span class="bug-ai codex">Codex</span>
+      Hallucinated Notion MCP tool name (<code>create-a-page</code> instead of <code>API-post-page</code>) &mdash; crashes at runtime
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai codex">Codex</span>
+      Wrong Notion API schema: <code>parent.data_source_id</code> instead of <code>parent.database_id</code>, wrong property structure
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai codex">Codex</span>
+      Hardcoded absolute paths in test suite &mdash; breaks in worktrees and CI
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai gemini">Gemini</span>
+      Zod v4 crash: <code>z.record(z.any())</code> throws TypeError on nested objects &mdash; blocks ALL real MCP calls
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai gemini">Gemini</span>
+      MCP client ignores per-server env overrides &mdash; external MCP servers can't authenticate
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai gemini">Gemini</span>
+      Deprecated model hardcoded (<code>claude-3-7-sonnet-20250219</code>) &mdash; returns 404 from API
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai gemini">Gemini</span>
+      Hallucinated npm package name (<code>@modelcontextprotocol/server-google-workspace</code> doesn't exist)
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai gemini">Gemini</span>
+      5 TypeScript type errors (API mismatches with croner, MCP SDK, zod)
+    </div>
+    <div class="bug-item">
+      <span class="bug-ai claude">Claude</span>
+      No shell/exec step type &mdash; cannot interact with local OS directly (design gap, not a bug)
+    </div>
+  </div>
+</section>
+
+<!-- EVALUATION CRITERIA -->
+<section>
+  <h2>&#128202; Evaluation Criteria (per judge.md)</h2>
+  <div class="test-section">
+    <table class="criteria-table">
+      <thead>
+        <tr>
+          <th>Criterion</th>
+          <th>Claude</th>
+          <th>Codex</th>
+          <th>Gemini</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Ease of Setup</strong><br><span style="color:var(--text-muted);font-size:0.8rem">Least human intervention needed</span></td>
+          <td><span class="check">&#9733;&#9733;&#9733;&#9733;</span><br>Full source local, clean build, 43 passing tests. Minor YAML tweaks for Notion.</td>
+          <td><span class="warn">&#9733;&#9733;&#9733;</span><br>Source only on git branch. npm cache issues. 3 critical YAML bugs. But ships with templates.</td>
+          <td><span class="cross">&#9733;&#9733;</span><br>Source only on branch. 5 type errors. 5+ fixes needed per test. Deprecated model.</td>
+        </tr>
+        <tr>
+          <td><strong>Idempotency</strong><br><span style="color:var(--text-muted);font-size:0.8rem">Error handling without loops/crashes</span></td>
+          <td><span class="check">&#9733;&#9733;&#9733;&#9733;</span><br>Never crashed. Continues on MCP errors. Transactional state commits.</td>
+          <td><span class="warn">&#9733;&#9733;&#9733;</span><br>Crashes on wrong tool names. Retry support exists. Transactional state. Silent on API errors.</td>
+          <td><span class="cross">&#9733;&#9733;</span><br>Zod crashes block all nested-arg calls. Silently reports success on API errors. No retry logic.</td>
+        </tr>
+        <tr>
+          <td><strong>MCP Integration</strong><br><span style="color:var(--text-muted);font-size:0.8rem">Seamless standard MCP server handling</span></td>
+          <td><span class="check">&#9733;&#9733;&#9733;&#9733;</span><br>Correct tool names. No hallucination. Handles stdio/sse/mock transports. 21 Notion tools discovered.</td>
+          <td><span class="warn">&#9733;&#9733;</span><br>Hallucinated tool names &amp; schemas. New connection per call (inefficient). Env var mapping issues.</td>
+          <td><span class="cross">&#9733;&#9733;</span><br>Zod crash blocks real MCP calls. Missing env override support. Hallucinated package names.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- FINAL VERDICT -->
+<section>
+  <h2>&#9878; The Final Verdict</h2>
+  <div class="verdict-section">
+    <h3>1st Place: Claude (Anthropic &bull; Claude Code)</h3>
+    <p>
+      <strong>Claude delivered the most reliable, production-ready implementation.</strong> Zero critical bugs in the engine.
+      Clean TypeScript compilation, comprehensive test suite (43 tests), and correct MCP tool discovery without hallucination.
+      The pipeline engine handled all three gauntlet tests without crashing, even when receiving API errors.
+      Its only weakness is the missing <code>shell</code> step type, which limits local OS interaction.
+    </p>
+
+    <h3 style="margin-top:1.5rem">2nd Place: Codex (OpenAI &bull; Codex Agent)</h3>
+    <p>
+      <strong>Codex had the richest feature set</strong> &mdash; the only implementation with a native <code>shell</code> step,
+      AI chunking/aggregation, job templates, and an init command. However, it hallucinated Notion MCP tool names and schemas,
+      which is exactly the failure mode the gauntlet was designed to detect. The engine architecture is solid but the
+      pre-built YAML jobs contained critical errors that would fail at runtime.
+    </p>
+
+    <h3 style="margin-top:1.5rem">3rd Place: Gemini (Google &bull; Gemini CLI)</h3>
+    <p>
+      <strong>Gemini had the cleanest DSL design</strong> (filter/action/transform/ai/state) but the most bugs in practice.
+      The Zod v4 crash alone blocks every real-world MCP call with nested arguments. Combined with missing env overrides,
+      a deprecated hardcoded model, hallucinated package names, and 5 TypeScript errors, every single gauntlet test required
+      multiple manual patches before it could run. The architecture shows promise but the implementation is not production-ready.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>Generated by <strong>The Judge</strong> &bull; CronBot AI Showdown &bull; <a href="https://github.com/V1Zak/CronBot">github.com/V1Zak/CronBot</a></p>
+  <p style="margin-top:0.5rem">Evaluated with Claude Code (Opus 4.6) on March 8, 2026</p>
+</footer>
+
+</body>
+</html>
