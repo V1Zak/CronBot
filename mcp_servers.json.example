@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/vizak/Desktop/Dump",
+        "/Users/vizak/Vault/Organized"
+      ]
+    },
+    "slack": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_slack_server"
+      ],
+      "env": {
+        "SLACK_BOT_TOKEN": "xoxb-your-token"
+      }
+    }
+  }
+}

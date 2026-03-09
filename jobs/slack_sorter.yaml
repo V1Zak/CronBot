@@ -1,0 +1,39 @@
+name: slack-channel-sorter
+description: "Fetch Slack history, categorize bug reports with AI, notify"
+schedule: "*/5 * * * *"
+steps:
+  - id: fetch-history
+    type: mcp
+    server: slack
+    tool: conversations_history
+    input:
+      channel: "C12345678"
+      oldest: "{{ state.last_slack_ts }}"
+
+  - id: categorize-bugs
+    type: ai
+    prompt: |
+      Extract bug reports from these Slack messages.
+      Output a JSON array with "title" and "severity" fields.
+
+      Messages:
+      {{ steps.fetch-history.output }}
+    system: "You are an AI trained to extract bug reports. Respond ONLY with valid JSON."
+    mockResponse:
+      - title: "Login timeout on mobile"
+        severity: "high"
+      - title: "Dashboard chart not loading"
+        severity: "medium"
+
+  - id: notify-bugs
+    type: mcp
+    server: slack
+    tool: post_message
+    input:
+      channel: "#bug-reports"
+      text: "Bug reports found: {{ steps.categorize-bugs.output }}"
+
+  - id: save-state
+    type: state_write
+    entries:
+      last_slack_ts: "{{ now }}"

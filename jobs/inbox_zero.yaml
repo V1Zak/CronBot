@@ -1,0 +1,36 @@
+name: inbox-zero-assistant
+description: "Gmail Filter + AI: fetch unread emails, extract content, summarize, notify via Slack"
+schedule: "0 */1 * * *"
+steps:
+  - id: fetch-emails
+    type: mcp
+    server: google_workspace
+    tool: search_emails
+    input:
+      query: "is:unread category:primary"
+
+  - id: extract-content
+    type: transform
+    source: "{{ steps.fetch-emails.output }}"
+    query: "${ data.map(email => ({ subject: email.subject, sender: email.sender, snippet: (email.body || '').substring(0, 200) })) }"
+
+  - id: summarize
+    type: ai
+    prompt: |
+      Summarize the key action items from these emails into a concise markdown list:
+      {{ steps.extract-content.output }}
+    system: "You are a concise executive assistant."
+    mockResponse: "- Follow up with vendor on contract\n- Review Q4 budget report"
+
+  - id: notify-slack
+    type: mcp
+    server: slack
+    tool: post_message
+    input:
+      channel: "#inbox-zero"
+      text: "{{ steps.summarize.output }}"
+
+  - id: save-state
+    type: state_write
+    entries:
+      last_email_sync: "{{ now }}"

@@ -1,0 +1,34 @@
+name: note-organizer
+description: "Read raw notes, format with AI, write organized output"
+schedule: "0 0 * * *"
+steps:
+  - id: read-dump
+    type: mcp
+    server: filesystem
+    tool: read_file
+    input:
+      path: ./examples/filesystem/input/note.txt
+
+  - id: format-notes
+    type: ai
+    prompt: |
+      Format the following notes into structured Markdown with tags and action items.
+      Provide ONLY the markdown output.
+
+      Notes:
+      {{ steps.read-dump.output }}
+    system: "You are a highly organized note-taking assistant."
+    mockResponse: "# Notes\n\n- Follow up with API vendor\n- Clean up automation flow\n\n#ops #automation"
+
+  - id: write-organized
+    type: mcp
+    server: filesystem
+    tool: write_file
+    input:
+      path: ./examples/filesystem/output/organized-notes.md
+      content: "{{ steps.format-notes.output }}"
+
+  - id: save-state
+    type: state_write
+    entries:
+      last_organized: "{{ now }}"
