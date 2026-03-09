@@ -42,7 +42,7 @@ const transformStepSchema = stepBaseSchema.extend({
 const aiStepSchema = stepBaseSchema.extend({
   type: z.literal("ai"),
   prompt: z.string().min(1),
-  model: z.string().default("claude-3-5-sonnet-latest"),
+  model: z.string().default("claude-sonnet-4-20250514"),
   system: z.string().optional(),
   source: JsonSchema.optional(),
   chunk: z
@@ -61,11 +61,17 @@ const stateWriteStepSchema = stepBaseSchema.extend({
   entries: z.record(z.string(), JsonSchema),
 });
 
+const execStepSchema = stepBaseSchema.extend({
+  type: z.literal("exec"),
+  command: z.string().min(1),
+  args: z.array(z.string()).optional(),
+});
+
 export const jobSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   schedule: z.string().optional(),
-  steps: z.array(z.discriminatedUnion("type", [mcpStepSchema, transformStepSchema, aiStepSchema, stateWriteStepSchema])).min(1),
+  steps: z.array(z.discriminatedUnion("type", [mcpStepSchema, transformStepSchema, aiStepSchema, stateWriteStepSchema, execStepSchema])).min(1),
 });
 
 export type JobDefinition = z.infer<typeof jobSchema>;

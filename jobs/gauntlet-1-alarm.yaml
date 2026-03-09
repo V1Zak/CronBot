@@ -1,0 +1,15 @@
+name: gauntlet-alarm
+description: "Gauntlet Test 1: Play a system sound on macOS after a 2-minute delay"
+schedule: "*/2 * * * *"
+steps:
+  - id: play-sound
+    type: exec
+    command: afplay
+    args:
+      - /System/Library/Sounds/Glass.aiff
+
+  - id: log-alarm
+    type: state_write
+    entries:
+      last_alarm: "{{ now }}"
+      alarm_status: triggered

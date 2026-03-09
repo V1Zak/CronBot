@@ -115,6 +115,24 @@ export class PipelineEngine {
       return this.executeAiStep(step, context);
     }
 
+    if (step.type === "exec") {
+      const command = String(renderTemplate(step.command, context));
+      const args = step.args
+        ? (step.args as string[]).map((a) => String(renderTemplate(a, context)))
+        : [];
+      const proc = Bun.spawn([command, ...args], {
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const exitCode = await proc.exited;
+      const stdout = await new Response(proc.stdout).text();
+      const stderr = await new Response(proc.stderr).text();
+      if (exitCode !== 0) {
+        throw new Error(`exec "${command}" failed (exit ${exitCode}): ${stderr || stdout}`);
+      }
+      return { stdout: stdout.trim(), stderr: stderr.trim(), exitCode };
+    }
+
     const entries = renderTemplate(step.entries, context) as Record<string, unknown>;
     Object.assign(stagedState, entries);
     return entries;
