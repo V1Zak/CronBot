@@ -19,7 +19,7 @@ You are operating within the **CronBot** workspace. Your primary goal is to help
 *   **Stateless Jobs, Stateful Engine:** Job YAML definitions should be entirely stateless pipelines. The Engine handles state injection (e.g., querying SQLite for `last_checked_timestamp` and injecting it into the YAML variable `{{ state.last_ts }}`).
 
 ## Git & Branching Rules
-*   **Never commit to `main`.** The `main` branch contains only shared documentation (`plan.md`, `GEMINI.md`, `judge.md`, `README.md`, `.env.example`).
+*   **Never commit to `main`.** The `main` branch contains only shared documentation (`plan.md`, `rules.md`, `judge.md`, `README.md`, `.env.example`).
 *   **Create a dedicated branch** named after your AI model (e.g., `Claude`, `Codex`, `Gemini`). All implementation code must live on your branch only.
 *   **Branch from `main`:** `git checkout -b <YourModelName> main`
 

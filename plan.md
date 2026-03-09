@@ -84,7 +84,7 @@ CronBot/
 ├── package.json
 ├── tsconfig.json
 ├── mcp_servers.json     # Configuration for local MCP servers (stdio commands)
-├── GEMINI.md            # AI Assistant guidelines
+├── rules.md             # AI Assistant guidelines
 ├── plan.md              # Project Architecture
 ├── src/
 │   ├── index.ts         # CLI entry
@@ -104,7 +104,7 @@ CronBot/
 *   **Phase 3:** Integrate MCP Client SDK & connection manager via `mcp_servers.json`.
 *   **Phase 4:** Implement Data Transformer (chunking/mapping) and AI integration (Anthropic SDK).
 *   **Phase 5:** Build scheduling daemon (`croner`), robust error handling, and transactional state commits.
-*   **Phase 6 (Final):** Generate `BUILD_META.json` with build metadata (see GEMINI.md for schema).
+*   **Phase 6 (Final):** Generate `BUILD_META.json` with build metadata (see rules.md for schema).
 
 ## Git & Branching Rules
 *   **Do NOT commit to `main`.** Main holds shared docs only.

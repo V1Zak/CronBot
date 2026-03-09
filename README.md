@@ -2,7 +2,7 @@
 
 Welcome to **CronBot**, a unique experiment in autonomous software engineering. 
 
-The premise of this repository is simple: Provide three different foundational documents (`plan.md` architecture and `GEMINI.md`/character files) and see how three top-tier AI models perform when tasked with building the same complex application with minimal human intervention.
+The premise of this repository is simple: Provide three different foundational documents (`plan.md` architecture and `rules.md` coding standards) and see how three top-tier AI models perform when tasked with building the same complex application with minimal human intervention.
 
 ## The Application: CronBot
 
@@ -23,7 +23,7 @@ This repository contains the results of the showdown. Each **git branch** contai
 
 To ensure a fair evaluation, all AIs were given the exact same starting point:
 1.  **`plan.md`**: Outlining the technical stack (Bun, TypeScript, SQLite, MCP, Anthropic SDK) and the architectural call graph.
-2.  **`GEMINI.md` / System Prompt**: Outlining strict coding standards, idempotency requirements, and safety guidelines.
+2.  **`rules.md`**: Outlining strict coding standards, idempotency requirements, and safety guidelines.
 3.  **Minimal Assistance**: The AIs were expected to scaffold the project, write the core engine, implement the MCP client manager, build robust data transformers, and write YAML test jobs natively without constant human hand-holding.
 
 ## The Judge & The Gauntlet
